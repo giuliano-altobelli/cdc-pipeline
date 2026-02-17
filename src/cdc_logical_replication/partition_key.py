@@ -141,8 +141,12 @@ def _table_name(parsed_payload: dict[str, Any] | None) -> str:
     if not parsed_payload:
         return "unknown.unknown"
 
-    schema = parsed_payload.get("schema") if isinstance(parsed_payload.get("schema"), str) else "unknown"
-    table = parsed_payload.get("table") if isinstance(parsed_payload.get("table"), str) else "unknown"
+    schema = (
+        parsed_payload.get("schema") if isinstance(parsed_payload.get("schema"), str) else "unknown"
+    )
+    table = (
+        parsed_payload.get("table") if isinstance(parsed_payload.get("table"), str) else "unknown"
+    )
     return f"{schema}.{table}"
 
 

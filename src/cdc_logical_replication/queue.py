@@ -33,9 +33,7 @@ class InflightEventQueue:
     async def put(self, event: ChangeEvent) -> None:
         size = event.record_size_bytes
         if size > self._max_bytes:
-            raise ValueError(
-                f"Event size ({size}) exceeds queue byte capacity ({self._max_bytes})"
-            )
+            raise ValueError(f"Event size ({size}) exceeds queue byte capacity ({self._max_bytes})")
 
         async with self._bytes_lock:
             await self._bytes_lock.wait_for(lambda: self._bytes_inflight + size <= self._max_bytes)

@@ -101,6 +101,7 @@ def test_kinesis_publisher_retries_transient_record_errors_then_succeeds(
     Simulates 2 retriable per-record failures, then sends to real Kinesis.
     Verifies 3 attempts total, queue drain, and frontier advancement.
     """
+
     async def scenario() -> None:
         event = ChangeEvent(
             lsn=100,
@@ -151,6 +152,7 @@ def test_kinesis_publisher_drops_non_retriable_stream_error_without_retry(
     Uses a guaranteed-missing stream name to trigger non-retriable ResourceNotFound.
     Verifies fail-fast (single call), queue drain, and frontier advancement.
     """
+
     async def scenario() -> None:
         event = ChangeEvent(
             lsn=200,

@@ -129,7 +129,9 @@ def test_cdc_logical_replication_e2e(integration_settings: Settings) -> None:
             _assert_format_version_2_envelope(envelope)
     finally:
         _drop_test_table(conninfo=test_settings.postgres_conninfo, table_name=table_name)
-        _drop_replication_slot(conninfo=test_settings.postgres_conninfo, slot_name=test_settings.replication_slot)
+        _drop_replication_slot(
+            conninfo=test_settings.postgres_conninfo, slot_name=test_settings.replication_slot
+        )
 
 
 async def _collect_replication_events(
@@ -247,8 +249,7 @@ async def _collect_replication_events(
                     raise AssertionError(f"Unexpected replication frame tag: {tag!r}")
 
                 raise AssertionError(
-                    "Timed out waiting for replication events. "
-                    f"Observed kinds: {kinds or ['none']}"
+                    f"Timed out waiting for replication events. Observed kinds: {kinds or ['none']}"
                 )
             finally:
                 if not read_task.done():
@@ -333,21 +334,16 @@ def _create_test_table(*, conninfo: str, table_name: str) -> None:
     with psycopg.connect(conninfo=conninfo, autocommit=True) as connection:
         with connection.cursor() as cursor:
             cursor.execute(
-                sql.SQL(
-                    "CREATE TABLE {} ("
-                    "id BIGSERIAL PRIMARY KEY, "
-                    "value TEXT NOT NULL"
-                    ")"
-                ).format(sql.Identifier(table_name))
+                sql.SQL("CREATE TABLE {} (id BIGSERIAL PRIMARY KEY, value TEXT NOT NULL)").format(
+                    sql.Identifier(table_name)
+                )
             )
 
 
 def _drop_test_table(*, conninfo: str, table_name: str) -> None:
     with psycopg.connect(conninfo=conninfo, autocommit=True) as connection:
         with connection.cursor() as cursor:
-            cursor.execute(
-                sql.SQL("DROP TABLE IF EXISTS {}").format(sql.Identifier(table_name))
-            )
+            cursor.execute(sql.SQL("DROP TABLE IF EXISTS {}").format(sql.Identifier(table_name)))
 
 
 def _drop_replication_slot(*, conninfo: str, slot_name: str) -> None:

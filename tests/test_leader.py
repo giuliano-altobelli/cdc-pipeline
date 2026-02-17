@@ -43,7 +43,9 @@ class _StubConnection:
         return self._cursor
 
 
-def test_watchdog_exits_cleanly_when_stopped_with_lock_held(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_watchdog_exits_cleanly_when_stopped_with_lock_held(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     async def scenario() -> None:
         cursor = _StubCursor(rows=[(True,)])
         session = LeaderSession.model_construct(connection=_StubConnection(cursor), lock_key=123)
@@ -64,7 +66,9 @@ def test_watchdog_raises_when_lock_is_lost(monkeypatch: pytest.MonkeyPatch) -> N
     async def scenario() -> None:
         lock_key = -1
         cursor = _StubCursor(rows=[(False,)])
-        session = LeaderSession.model_construct(connection=_StubConnection(cursor), lock_key=lock_key)
+        session = LeaderSession.model_construct(
+            connection=_StubConnection(cursor), lock_key=lock_key
+        )
         stop_event = asyncio.Event()
 
         async def fake_sleep(_: float) -> None:

@@ -66,7 +66,7 @@ def test_table_fallback_prefers_schema_table() -> None:
 
 
 def test_static_fallback_requires_value() -> None:
-    payload = b'{}'
+    payload = b"{}"
 
     try:
         extract_partition_key(

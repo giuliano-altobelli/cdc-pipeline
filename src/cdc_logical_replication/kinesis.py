@@ -41,8 +41,7 @@ except ImportError:  # pragma: no cover - only used at runtime in deployed conta
 
 
 class KinesisClient(Protocol):
-    def put_records(self, *, StreamName: str, Records: list[dict[str, Any]]) -> dict[str, Any]:
-        ...
+    def put_records(self, *, StreamName: str, Records: list[dict[str, Any]]) -> dict[str, Any]: ...
 
 
 def create_kinesis_client(*, region_name: str) -> KinesisClient:

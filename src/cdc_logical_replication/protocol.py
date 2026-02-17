@@ -26,7 +26,7 @@ def parse_xlogdata(buf: bytes) -> tuple[int, int, int, bytes]:
     if tag != b"w":
         raise ReplicationProtocolError(f"Expected XLogData tag b'w', got {tag!r}")
 
-    payload = bytes(buf[XLOGDATA_HDR.size:])
+    payload = bytes(buf[XLOGDATA_HDR.size :])
     return wal_start, wal_end, server_time_us, payload
 
 

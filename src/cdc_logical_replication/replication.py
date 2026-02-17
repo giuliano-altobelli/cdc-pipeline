@@ -27,12 +27,13 @@ def build_start_replication_statement(
     slot_name: str,
     start_lsn: int,
     wal2json_options_sql: str,
-) -> str:
-    return (
+) -> bytes:
+    statement = (
         f"START_REPLICATION SLOT {slot_name} "
         f"LOGICAL {lsn_int_to_str(start_lsn)} "
         f"({wal2json_options_sql})"
     )
+    return statement.encode("utf-8")
 
 
 class _ReplicationStream:
@@ -157,7 +158,9 @@ async def _replication_loop(
             if tag == b"k":
                 _, _, reply_requested = parse_keepalive(frame)
                 if reply_requested:
-                    latest_safe_lsn = _drain_frontier_updates(frontier_updates, default=latest_safe_lsn)
+                    latest_safe_lsn = _drain_frontier_updates(
+                        frontier_updates, default=latest_safe_lsn
+                    )
                     await copy.write(build_standby_status(latest_safe_lsn, reply_requested=1))
                     last_feedback_lsn = latest_safe_lsn
                     last_feedback_at = monotonic()

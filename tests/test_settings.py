@@ -20,7 +20,7 @@ def test_wal2json_format_version_defaults_to_2(_base_env: None) -> None:
     settings = Settings()
 
     assert settings.wal2json_format_version == 2
-    assert '"format-version" \'2\'' in settings.wal2json_options_sql
+    assert "\"format-version\" '2'" in settings.wal2json_options_sql
 
 
 def test_wal2json_format_version_rejects_non_2(
