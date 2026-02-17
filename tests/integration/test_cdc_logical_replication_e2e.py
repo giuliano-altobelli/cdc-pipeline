@@ -12,7 +12,6 @@ import psycopg
 import pytest
 from psycopg import pq, sql
 from psycopg.generators import copy_from, copy_to
-
 from src.cdc_logical_replication.ack import AckTracker
 from src.cdc_logical_replication.kinesis import KinesisPublisher, create_kinesis_client
 from src.cdc_logical_replication.models import ChangeEvent

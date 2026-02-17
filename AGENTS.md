@@ -11,6 +11,7 @@ Primary project config is in `pyproject.toml`; dependency locks are in `uv.lock`
 
 ## Build, Test, and Development Commands
 - `uv sync --group dev`: install runtime + dev dependencies into `.venv`.
+- `uv run ruff check src tests`: run lint checks (pyflakes + import sorting + core pycodestyle errors).
 - `uv run pytest -q tests`: run the test suite (unit + default-selected tests).
 - `RUN_INTEGRATION_TESTS=1 uv run pytest -q -m integration`: run integration tests (requires AWS/Postgres env vars).
 - `uv run cdc-logical-replication`: start the service through the package entrypoint.
@@ -24,7 +25,7 @@ Naming conventions:
 - constants: `UPPER_SNAKE_CASE`
 
 Prefer small, composable async units and structured logging (`LOGGER.info("event_name", extra={...})`).  
-No repo-pinned formatter/linter is currently configured; follow PEP 8 and keep imports grouped (stdlib, third-party, local).
+Lint with Ruff (`uv run ruff check src tests`) before opening a PR; keep imports grouped (stdlib, third-party, local).
 
 ## Testing Guidelines
 Use `pytest` with `test_*.py` files and `test_*` function names.  

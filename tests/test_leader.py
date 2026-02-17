@@ -4,7 +4,6 @@ import asyncio
 from typing import Any
 
 import pytest
-
 from src.cdc_logical_replication.leader import LeaderSession, leadership_watchdog
 
 

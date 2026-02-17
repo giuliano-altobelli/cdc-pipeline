@@ -3,7 +3,6 @@ from __future__ import annotations
 import asyncio
 
 import pytest
-
 from src.cdc_logical_replication.models import ChangeEvent
 from src.cdc_logical_replication.queue import InflightEventQueue
 

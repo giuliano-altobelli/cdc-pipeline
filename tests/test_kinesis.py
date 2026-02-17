@@ -5,7 +5,6 @@ from collections.abc import Sequence
 from typing import Any
 
 import pytest
-
 from src.cdc_logical_replication.ack import AckTracker
 from src.cdc_logical_replication.kinesis import KinesisPublisher
 from src.cdc_logical_replication.models import ChangeEvent

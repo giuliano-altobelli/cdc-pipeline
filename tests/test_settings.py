@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import pytest
 from pydantic import ValidationError
-
 from src.cdc_logical_replication.settings import Settings
 
 

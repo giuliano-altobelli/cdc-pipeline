@@ -7,7 +7,6 @@ from typing import Any
 from uuid import uuid4
 
 import pytest
-
 from src.cdc_logical_replication.ack import AckTracker
 from src.cdc_logical_replication.kinesis import KinesisPublisher, create_kinesis_client
 from src.cdc_logical_replication.models import ChangeEvent
