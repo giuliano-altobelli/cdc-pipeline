@@ -136,18 +136,22 @@ async def _replication_loop(
 
             tag = frame[:1]
             if tag == b"w":
-                _, wal_end, _, payload = parse_xlogdata(frame)
+                wal_start, _, _, payload = parse_xlogdata(frame)
+                # XLogData.wal_end is a sender-side watermark, not the current
+                # message position. Registering/acking by wal_start keeps LSN
+                # progression tied to message order and prevents false
+                # non-monotonic regressions on reconnect/replay.
                 partition_key = extract_partition_key(
                     payload,
-                    lsn=wal_end,
+                    lsn=wal_start,
                     mode=settings.partition_key_mode,
                     fallback=settings.partition_key_fallback,
                     static_fallback_value=settings.partition_key_static_value,
                 )
-                ack_id = ack_tracker.register(wal_end)
+                ack_id = ack_tracker.register(wal_start)
                 await queue.put(
                     ChangeEvent(
-                        lsn=wal_end,
+                        lsn=wal_start,
                         ack_id=ack_id,
                         payload=payload,
                         partition_key=partition_key,
