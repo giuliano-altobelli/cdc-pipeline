@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from time import monotonic
 from typing import Any
 
@@ -20,6 +21,8 @@ from cdc_logical_replication.protocol import (
 )
 from cdc_logical_replication.queue import InflightEventQueue
 from cdc_logical_replication.settings import Settings
+
+LOGGER = logging.getLogger(__name__)
 
 
 def build_start_replication_statement(
@@ -60,6 +63,21 @@ async def consume_replication_stream(
     ack_tracker: AckTracker,
     frontier_updates: asyncio.Queue[int],
 ) -> None:
+    frontier_lsn = ack_tracker.frontier_lsn
+    last_registered_lsn = ack_tracker.last_registered_lsn
+    start_lsn = _resolve_start_lsn(
+        frontier_lsn=frontier_lsn,
+        last_registered_lsn=last_registered_lsn,
+    )
+    LOGGER.info(
+        "replication_start_lsn_selected",
+        extra={
+            "frontier_lsn": frontier_lsn,
+            "last_registered_lsn": last_registered_lsn,
+            "start_lsn": start_lsn,
+        },
+    )
+
     connection = await psycopg.AsyncConnection.connect(
         conninfo=settings.postgres_conninfo,
         autocommit=True,
@@ -70,7 +88,7 @@ async def consume_replication_stream(
         async with connection.cursor() as cursor:
             statement = build_start_replication_statement(
                 slot_name=settings.replication_slot,
-                start_lsn=ack_tracker.frontier_lsn,
+                start_lsn=start_lsn,
                 wal2json_options_sql=settings.wal2json_options_sql,
             )
             await cursor.execute(statement)
@@ -91,6 +109,10 @@ async def consume_replication_stream(
             )
     finally:
         await connection.close()
+
+
+def _resolve_start_lsn(*, frontier_lsn: int, last_registered_lsn: int) -> int:
+    return max(frontier_lsn, last_registered_lsn)
 
 
 async def _replication_loop(
