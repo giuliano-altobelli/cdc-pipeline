@@ -10,7 +10,10 @@ from cdc_logical_replication.leader import LeaderSession, leadership_watchdog, w
 from cdc_logical_replication.queue import InflightEventQueue
 from cdc_logical_replication.replication import consume_replication_stream
 from cdc_logical_replication.settings import Settings
-from cdc_logical_replication.slot import ensure_replication_slot
+from cdc_logical_replication.slot import (
+    ensure_replication_slot,
+    get_replication_slot_confirmed_lsn,
+)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -53,7 +56,22 @@ async def run() -> None:
             )
             LOGGER.info("replication_slot_ready", extra={"slot_created": created})
 
-            await _run_leader_pipeline(settings=settings, leader_session=leader_session)
+            initial_frontier_lsn = await get_replication_slot_confirmed_lsn(
+                conninfo=settings.postgres_conninfo,
+                slot_name=settings.replication_slot,
+            )
+            if initial_frontier_lsn < 0:
+                raise RuntimeError(f"Invalid initial frontier LSN: {initial_frontier_lsn}")
+            LOGGER.info(
+                "replication_start_lsn_resolved",
+                extra={"initial_frontier_lsn": initial_frontier_lsn},
+            )
+
+            await _run_leader_pipeline(
+                settings=settings,
+                leader_session=leader_session,
+                initial_frontier_lsn=initial_frontier_lsn,
+            )
         except asyncio.CancelledError:
             raise
         except Exception:
@@ -65,12 +83,17 @@ async def run() -> None:
         await asyncio.sleep(settings.standby_retry_interval_s)
 
 
-async def _run_leader_pipeline(*, settings: Settings, leader_session: LeaderSession) -> None:
+async def _run_leader_pipeline(
+    *,
+    settings: Settings,
+    leader_session: LeaderSession,
+    initial_frontier_lsn: int,
+) -> None:
     queue = InflightEventQueue(
         max_messages=settings.inflight_max_messages,
         max_bytes=settings.inflight_max_bytes,
     )
-    ack_tracker = AckTracker(initial_lsn=0)
+    ack_tracker = AckTracker(initial_lsn=initial_frontier_lsn)
     frontier_updates: asyncio.Queue[int] = asyncio.Queue()
 
     kinesis_client = create_kinesis_client(region_name=settings.aws_region)
