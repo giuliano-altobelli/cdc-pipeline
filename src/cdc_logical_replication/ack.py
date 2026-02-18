@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import logging
 from collections import deque
 
 from pydantic import BaseModel
+
+LOGGER = logging.getLogger(__name__)
 
 
 class _PendingLsn(BaseModel):
@@ -28,18 +31,28 @@ class AckTracker:
         return self._frontier
 
     @property
+    def last_registered_lsn(self) -> int:
+        return self._last_registered
+
+    @property
     def pending_count(self) -> int:
         return len(self._pending)
 
     def register(self, lsn: int) -> int:
-        if lsn < self._last_registered:
-            raise ValueError(
-                f"LSN must be non-decreasing: got {lsn}, last registered {self._last_registered}"
+        previous_last_registered = self._last_registered
+        if lsn < previous_last_registered:
+            LOGGER.warning(
+                "ack_register_lsn_regression",
+                extra={
+                    "incoming_lsn": lsn,
+                    "last_registered_lsn": previous_last_registered,
+                    "frontier_lsn": self._frontier,
+                },
             )
 
         self._next_ack_id += 1
         ack_id = self._next_ack_id
-        self._last_registered = lsn
+        self._last_registered = max(previous_last_registered, lsn)
         pending = _PendingLsn(ack_id=ack_id, lsn=lsn)
         self._pending.append(pending)
         self._pending_by_ack_id[ack_id] = pending

@@ -13,6 +13,20 @@ def test_register_returns_monotonic_ack_ids_for_duplicate_lsns() -> None:
     assert (first, second, third) == (1, 2, 3)
 
 
+def test_last_registered_lsn_tracks_registered_progress_not_frontier() -> None:
+    tracker = AckTracker(initial_lsn=10)
+    ack_100 = tracker.register(100)
+    tracker.register(100)
+    tracker.register(120)
+
+    assert tracker.last_registered_lsn == 120
+    assert tracker.frontier_lsn == 10
+
+    assert tracker.mark_published_by_id(ack_100) == 100
+    assert tracker.frontier_lsn == 100
+    assert tracker.last_registered_lsn == 120
+
+
 def test_frontier_advances_only_for_contiguous_successes_with_id_acks() -> None:
     tracker = AckTracker(initial_lsn=0)
     ack_100 = tracker.register(100)
@@ -93,9 +107,16 @@ def test_large_inflight_reverse_publish_advances_frontier_only_when_contiguous()
     assert tracker.frontier_lsn == max_lsn
 
 
-def test_register_requires_non_decreasing_lsn() -> None:
+def test_register_allows_regressive_lsn_and_keeps_high_watermark() -> None:
     tracker = AckTracker(initial_lsn=0)
-    tracker.register(200)
+    first = tracker.register(300)
+    second = tracker.register(100)
 
-    with pytest.raises(ValueError):
-        tracker.register(100)
+    assert (first, second) == (1, 2)
+    assert tracker.frontier_lsn == 0
+    assert tracker.last_registered_lsn == 300
+
+    assert tracker.mark_published_by_id(first) == 300
+    assert tracker.mark_published_by_id(second) is None
+    assert tracker.frontier_lsn == 300
+    assert tracker.last_registered_lsn == 300
