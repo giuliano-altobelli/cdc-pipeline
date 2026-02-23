@@ -3,8 +3,10 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import sys
 
 from cdc_logical_replication.ack import AckTracker
+from cdc_logical_replication.json_logging import JsonLogFormatter
 from cdc_logical_replication.kinesis import KinesisPublisher, create_kinesis_client
 from cdc_logical_replication.leader import LeaderSession, leadership_watchdog, wait_for_leadership
 from cdc_logical_replication.queue import InflightEventQueue
@@ -21,9 +23,18 @@ LOGGER = logging.getLogger(__name__)
 def configure_logging() -> None:
     level_name = os.getenv("LOG_LEVEL", "INFO").upper()
     level = getattr(logging, level_name, logging.INFO)
+
+    handler = logging.StreamHandler(stream=sys.stdout)
+    log_format = os.getenv("LOG_FORMAT", "json").lower()
+    if log_format == "plain":
+        handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s %(message)s"))
+    else:
+        handler.setFormatter(JsonLogFormatter())
+
     logging.basicConfig(
         level=level,
-        format="%(asctime)s %(levelname)s %(name)s %(message)s",
+        handlers=[handler],
+        force=True,
     )
 
 
