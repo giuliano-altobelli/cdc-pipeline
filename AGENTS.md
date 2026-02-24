@@ -27,6 +27,13 @@ Naming conventions:
 - constants: `UPPER_SNAKE_CASE`
 
 Prefer small, composable async units and structured logging (`LOGGER.info("event_name", extra={...})`).
+Logging:
+- Default is JSON to stdout (`LOG_FORMAT=json`); set `LOG_FORMAT=plain` for human-readable logs.
+- Control verbosity via `LOG_LEVEL` (default `INFO`).
+- Keep `message` as a stable event name and put context in `extra` (prefer JSON-serializable primitives).
+- JSON keys: `timestamp`, `level`, `logger`, `message`, plus optional `extra` and `exc_info`.
+- Use `LOGGER.exception("event_name", extra={...})` inside `except` blocks to include stack traces.
+
 Lint with Ruff and type-check with Pyrefly (`uv run ruff check src tests`, `uv run pyrefly check`) before opening a PR.
 Keep imports grouped (stdlib, third-party, local).
 

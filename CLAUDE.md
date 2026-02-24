@@ -42,6 +42,7 @@ Key data flow: `Postgres WAL → replication.py → InflightEventQueue → batch
 | `partition_key.py` | Extracts Kinesis partition key (primary_key mode or fallback to lsn/table/static) |
 | `protocol.py` | Binary protocol parsing/building (XLogData, Keepalive, Standby Status) |
 | `slot.py` | Replication slot creation and LSN checkpoint queries |
+| `json_logging.py` | JSON log formatter; extracts `extra` fields into structured output |
 
 ### Design Decisions
 
@@ -53,9 +54,16 @@ Key data flow: `Postgres WAL → replication.py → InflightEventQueue → batch
 
 - Python 3.10+, 100-char line length, 4-space indent, explicit type hints
 - `snake_case` functions/vars, `PascalCase` classes, `UPPER_SNAKE_CASE` constants
-- Structured logging: `LOGGER.info("event_name", extra={...})`
+- Structured logging: `LOGGER.info("event_name", extra={...})` — JSON output by default (`JsonLogFormatter`), plain text with `LOG_FORMAT=plain`
 - Imports grouped: stdlib → third-party → local
 - All I/O is async (asyncio)
+
+## Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `LOG_LEVEL` | `INFO` | Python log level (`DEBUG`, `INFO`, `WARNING`, `ERROR`) |
+| `LOG_FORMAT` | `json` | Log output format: `json` (structured) or `plain` (human-readable) |
 
 ## Testing
 
